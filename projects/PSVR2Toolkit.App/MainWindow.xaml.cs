@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private bool isUpdatingGaze = false;
     private CancellationTokenSource? gazeCancellationTokenSource;
     private bool ignoreRecalibrationThisSession = false;
+    private UserSettings userSettings = new UserSettings();
 
     public MainWindow()
     {
@@ -53,6 +54,10 @@ public partial class MainWindow : Window
 
         // Load trigger profiles
         LoadTriggerProfiles();
+
+        // Load persisted user settings and restore gaze cursor state
+        userSettings = UserSettings.Load();
+        RestoreGazeCursorSettings();
 
         // Run initial health check
         RunHealthCheck();
@@ -524,6 +529,12 @@ public partial class MainWindow : Window
     {
         try
         {
+            userSettings.GazeCursorEnabled = true;
+            userSettings.CursorSensitivity = CursorSensitivitySlider.Value;
+            userSettings.CursorSmoothing = CursorSmoothingSlider.Value;
+            userSettings.Save();
+            UpdateGazeCursorPersistLabel();
+
             var ipcClient = IpcClient.Instance();
             if (ipcClient != null && ipcClient.IsConnected)
             {
@@ -547,6 +558,10 @@ public partial class MainWindow : Window
     {
         try
         {
+            userSettings.GazeCursorEnabled = false;
+            userSettings.Save();
+            UpdateGazeCursorPersistLabel();
+
             var ipcClient = IpcClient.Instance();
             if (ipcClient != null && ipcClient.IsConnected)
             {
@@ -574,11 +589,55 @@ public partial class MainWindow : Window
 
                 ipcClient.EnableGazeCursor(sensitivity, smoothing, deadzone);
             }
+
+            // Persist slider values whenever they change (even when cursor is off)
+            userSettings.CursorSensitivity = CursorSensitivitySlider.Value;
+            userSettings.CursorSmoothing = CursorSmoothingSlider.Value;
+            userSettings.Save();
         }
         catch (Exception ex)
         {
             Logger.Error($"Failed to update cursor settings: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// Restores the gaze cursor checkbox and slider values from <see cref="userSettings"/>
+    /// and, if the driver is already connected, sends the appropriate IPC command.
+    /// Slider <c>ValueChanged</c> handlers are temporarily detached while slider values
+    /// are restored to avoid redundant saves and spurious IPC calls.
+    /// </summary>
+    private void RestoreGazeCursorSettings()
+    {
+        // Detach slider ValueChanged handlers while restoring values to avoid redundant
+        // saves/IPC calls before the checkbox state is also fully restored.
+        CursorSensitivitySlider.ValueChanged -= CursorSettings_Changed;
+        CursorSmoothingSlider.ValueChanged -= CursorSettings_Changed;
+
+        CursorSensitivitySlider.Value = userSettings.CursorSensitivity;
+        CursorSmoothingSlider.Value = userSettings.CursorSmoothing;
+
+        CursorSensitivitySlider.ValueChanged += CursorSettings_Changed;
+        CursorSmoothingSlider.ValueChanged += CursorSettings_Changed;
+
+        // Setting IsChecked will fire the Checked/Unchecked handler which will
+        // send the IPC command and persist – that is fine here.
+        GazeCursorCheckBox.IsChecked = userSettings.GazeCursorEnabled;
+
+        UpdateGazeCursorPersistLabel();
+
+        Logger.Info($"Restored gaze cursor settings: enabled={userSettings.GazeCursorEnabled}, " +
+                    $"sensitivity={userSettings.CursorSensitivity}, smoothing={userSettings.CursorSmoothing}");
+    }
+
+    private void UpdateGazeCursorPersistLabel()
+    {
+        if (GazeCursorPersistLabel == null)
+            return;
+
+        GazeCursorPersistLabel.Text = userSettings.GazeCursorEnabled
+            ? "✔ Gaze-to-Mouse is ON — setting saved and will be restored on next launch"
+            : "✘ Gaze-to-Mouse is OFF — setting saved and will be restored on next launch";
     }
 
     private void OnRecalibrationNeeded(object sender, EventArgs e)

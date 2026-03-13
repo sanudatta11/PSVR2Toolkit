@@ -19,9 +19,14 @@ namespace PSVR2Toolkit.App
         public const string PROFILES_FILENAME = "TriggerProfiles.json";
         public const string PROFILES_FOLDER = "Resources";
         public const string CALIBRATION_FILENAME = "PSVR2Calibration.txt";
+        public const string SETTINGS_FILENAME = "PSVR2ToolkitSettings.json";
 
         public static string CalibrationPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             CALIBRATION_FILENAME);
+
+        public static string SettingsPath => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            SETTINGS_FILENAME);
     }
 }
