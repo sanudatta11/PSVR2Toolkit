@@ -24,7 +24,7 @@ Enhance your PlayStation VR2 experience on PC with better eye tracking, improved
 ## Quick Start Guide
 
 ### Step 1: Download
-Download the latest release from the [Releases page](https://github.com/BnuuySolutions/PSVR2Toolkit/releases).
+Download the latest release from the [Releases page](https://github.com/sanudatta11/PSVR2Toolkit/releases).
 
 ### Step 2: Install (Choose One Method)
 
