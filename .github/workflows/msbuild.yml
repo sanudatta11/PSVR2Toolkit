@@ -63,10 +63,12 @@ jobs:
         name: psvr2-toolkit-app
         path: |
           ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe
+          ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.dll
+          ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.runtimeconfig.json
+          ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.deps.json
           ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.pdb
           ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.IPC.dll
           ${{env.ARTIFACTS_DIR}}/Newtonsoft.Json.dll
-          ${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe.config
 
     - name: Upload Installation Scripts
       uses: actions/upload-artifact@v4
@@ -88,11 +90,13 @@ jobs:
         # Copy driver files
         Copy-Item "${{env.ARTIFACTS_DIR}}/driver_playstation_vr2.dll" -Destination release/
 
-        # Copy companion app files
+        # Copy companion app files (.NET 8.0)
         Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.dll" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.runtimeconfig.json" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.deps.json" -Destination release/
         Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.IPC.dll" -Destination release/
         Copy-Item "${{env.ARTIFACTS_DIR}}/Newtonsoft.Json.dll" -Destination release/
-        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe.config" -Destination release/
 
         # Copy installation scripts
         Copy-Item scripts/driver-install.ps1 -Destination release/
