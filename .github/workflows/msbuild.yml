@@ -8,6 +8,8 @@ name: MSBuild
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -25,7 +27,7 @@ env:
   ARTIFACTS_DIR: ${{github.workspace}}/artifacts
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -74,6 +76,70 @@ jobs:
           scripts/driver-install.ps1
           scripts/driver-install-full.ps1
           scripts/driver-restore.ps1
+
+    # Package release files
+    - name: Create Release Package
+      if: startsWith(github.ref, 'refs/tags/')
+      shell: pwsh
+      run: |
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path release
+
+        # Copy driver files
+        Copy-Item "${{env.ARTIFACTS_DIR}}/driver_playstation_vr2.dll" -Destination release/
+
+        # Copy companion app files
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.IPC.dll" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/Newtonsoft.Json.dll" -Destination release/
+        Copy-Item "${{env.ARTIFACTS_DIR}}/PSVR2Toolkit.App.exe.config" -Destination release/
+
+        # Copy installation scripts
+        Copy-Item scripts/driver-install.ps1 -Destination release/
+        Copy-Item scripts/driver-install-full.ps1 -Destination release/
+        Copy-Item scripts/driver-restore.ps1 -Destination release/
+
+        # Copy documentation
+        Copy-Item README.md -Destination release/
+        Copy-Item CALIBRATION_INTEGRATION.md -Destination release/ -ErrorAction SilentlyContinue
+
+        # Create zip archive
+        Compress-Archive -Path release/* -DestinationPath PSVR2Toolkit-${{github.ref_name}}.zip
+
+    # Create GitHub Release
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          PSVR2Toolkit-${{github.ref_name}}.zip
+        body: |
+          ## PSVR2 Toolkit ${{github.ref_name}}
+
+          ### What's Included
+          - ✅ Enhanced driver with eye tracking calibration support
+          - ✅ Companion application with calibration UI
+          - ✅ Automated installation scripts
+          - ✅ Complete documentation
+
+          ### Installation
+          1. Download `PSVR2Toolkit-${{github.ref_name}}.zip`
+          2. Extract to a folder
+          3. Run `driver-install-full.ps1` as Administrator
+          4. Restart SteamVR
+          5. Run `PSVR2Toolkit.App.exe` for calibration and settings
+
+          ### New in This Release
+          - Eye tracking calibration system integrated
+          - Real-time gaze offset correction
+          - Improved companion app UI
+          - Better installation scripts
+
+          **Note:** Eye tracking calibration tool (PSVR2EyeTrackingCalibration.exe) must be placed in the same folder as PSVR2Toolkit.App.exe for calibration features to work.
+
+          For support, join our [Discord](https://discord.gg/dPsfJhsGwb)
+        draft: false
+        prerelease: false
 
     # Note: PSVR2EyeTrackingCalibration.exe should be built separately and included in releases
     # The calibration tool is located at j:\PSVR2EyeTrackingCalibration and requires OpenXR SDK
