@@ -5,6 +5,9 @@
 #include "vr_settings.h"
 
 #include <cstdio>
+#include <fstream>
+#include <sstream>
+#include <shlobj.h>
 
 namespace psvr2_toolkit {
   namespace ipc {
@@ -18,6 +21,9 @@ namespace psvr2_toolkit {
       , m_socket{}
       , m_serverAddr{}
       , m_pGazeState(nullptr)
+      , m_calibrationActive(false)
+      , m_gazeOffsetX(0.0f)
+      , m_gazeOffsetY(0.0f)
     {}
 
     IpcServer *IpcServer::Instance() {
@@ -47,6 +53,8 @@ namespace psvr2_toolkit {
       m_initialized = true;
       m_doGaze = !VRSettings::GetBool(STEAMVR_SETTINGS_DISABLE_GAZE, SETTING_DISABLE_GAZE_DEFAULT_VALUE);
       m_doOpenness = VRSettings::GetBool(STEAMVR_SETTINGS_ENABLE_EYELID_ESTIMATION, SETTING_ENABLE_EYELID_ESTIMATION_DEFAULT_VALUE);
+
+      LoadCalibrationFile();
     }
 
     void IpcServer::Start() {
@@ -99,6 +107,38 @@ namespace psvr2_toolkit {
       }
       m_leftEyelidOpenness = leftEyelidOpenness;
       m_rightEyelidOpenness = rightEyelidOpenness;
+    }
+
+    void IpcServer::LoadCalibrationFile() {
+      char documentsPath[MAX_PATH];
+      if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_MYDOCUMENTS, NULL, 0, documentsPath))) {
+        std::string calibrationFilePath = std::string(documentsPath) + "\\PSVR2Calibration.txt";
+
+        std::ifstream calibrationFile(calibrationFilePath);
+        if (calibrationFile.is_open()) {
+          float offsetX = 0.0f, offsetY = 0.0f;
+          calibrationFile >> offsetX >> offsetY;
+
+          if (!calibrationFile.fail()) {
+            m_gazeOffsetX = offsetX;
+            m_gazeOffsetY = offsetY;
+            Util::DriverLog("[IPC_SERVER] Loaded gaze calibration: offsetX={}, offsetY={}", offsetX, offsetY);
+          } else {
+            Util::DriverLog("[IPC_SERVER] Failed to parse calibration file. Using defaults (0, 0).");
+            m_gazeOffsetX = 0.0f;
+            m_gazeOffsetY = 0.0f;
+          }
+          calibrationFile.close();
+        } else {
+          Util::DriverLog("[IPC_SERVER] No calibration file found. Using defaults (0, 0).");
+          m_gazeOffsetX = 0.0f;
+          m_gazeOffsetY = 0.0f;
+        }
+      } else {
+        Util::DriverLog("[IPC_SERVER] Failed to get Documents folder path.");
+        m_gazeOffsetX = 0.0f;
+        m_gazeOffsetY = 0.0f;
+      }
     }
 
     void IpcServer::ReceiveLoop() {
@@ -364,7 +404,7 @@ namespace psvr2_toolkit {
                 SendIpcCommand(clientSocket, Command_ServerGazeDataResult, &response, sizeof(response));
               }
             }
-            
+
           }
           break;
         }
@@ -378,6 +418,23 @@ namespace psvr2_toolkit {
         case Command_ClientTriggerEffectMultiplePositionVibration: {
           if (m_connections.contains(clientPort)) {
             pTriggerEffectManager->HandleIpcCommand(m_connections[clientPort].processId, pHeader, pData);
+          }
+          break;
+        }
+
+        case Command_ClientStartGazeCalibration: {
+          if (pHeader->dataLen == 0 && m_connections.contains(clientPort)) {
+            m_calibrationActive = true;
+            Util::DriverLog("[IPC_SERVER] Gaze calibration started");
+          }
+          break;
+        }
+
+        case Command_ClientStopGazeCalibration: {
+          if (pHeader->dataLen == 0 && m_connections.contains(clientPort)) {
+            m_calibrationActive = false;
+            LoadCalibrationFile();
+            Util::DriverLog("[IPC_SERVER] Gaze calibration stopped, calibration file reloaded");
           }
           break;
         }

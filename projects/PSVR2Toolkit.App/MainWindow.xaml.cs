@@ -45,6 +45,9 @@ public partial class MainWindow : Window
         // Run initial health check
         RunHealthCheck();
 
+        // Refresh calibration status
+        RefreshCalibrationStatus();
+
         Logger.Info($"{AppConstants.APP_NAME} v{AppConstants.APP_VERSION} started");
     }
 
@@ -328,5 +331,170 @@ public partial class MainWindow : Window
     {
         gazeUpdatePaused = !gazeUpdatePaused;
         PauseResumeButton.Content = gazeUpdatePaused ? "Resume" : "Pause";
+    }
+
+    // Eye Calibration handlers
+    private void LaunchCalibrationButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var assemblyPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (assemblyPath == null)
+            {
+                MessageBox.Show("Failed to locate application directory.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Logger.Error("Failed to get assembly path for calibration tool");
+                return;
+            }
+
+            var calibrationToolPath = System.IO.Path.Combine(assemblyPath, "PSVR2EyeTrackingCalibration.exe");
+
+            if (!System.IO.File.Exists(calibrationToolPath))
+            {
+                MessageBox.Show(
+                    "Calibration tool not found. Please ensure PSVR2EyeTrackingCalibration.exe is in the application directory.",
+                    "Calibration Tool Not Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Logger.Warning($"Calibration tool not found at: {calibrationToolPath}");
+                return;
+            }
+
+            Logger.Info("Launching calibration tool");
+            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = calibrationToolPath,
+                UseShellExecute = true
+            });
+
+            if (process != null)
+            {
+                MessageBox.Show(
+                    "Calibration tool launched!\n\n" +
+                    "1. Put on your VR headset\n" +
+                    "2. Look at the red dots that appear\n" +
+                    "3. Pull the right trigger when looking at each dot\n" +
+                    "4. Calibration will complete automatically",
+                    "Calibration Started",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                // Monitor process exit to refresh calibration status
+                Task.Run(() =>
+                {
+                    process.WaitForExit();
+                    Dispatcher.Invoke(() =>
+                    {
+                        RefreshCalibrationStatus();
+                        Logger.Info("Calibration tool exited, status refreshed");
+                    });
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to launch calibration tool: {ex.Message}", ex);
+            MessageBox.Show(
+                $"Failed to launch calibration tool:\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void ClearCalibrationButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to clear the current calibration?\n\n" +
+                "This will reset gaze offsets to zero. You can recalibrate at any time.",
+                "Clear Calibration",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                var calibrationPath = AppConstants.CalibrationPath;
+
+                if (System.IO.File.Exists(calibrationPath))
+                {
+                    System.IO.File.Delete(calibrationPath);
+                    Logger.Info("Calibration file deleted");
+                }
+
+                // Notify driver to reload (which will use 0,0 defaults)
+                var ipcClient = IpcClient.Instance();
+                if (ipcClient != null)
+                {
+                    ipcClient.StopGazeCalibration();
+                }
+
+                RefreshCalibrationStatus();
+
+                MessageBox.Show(
+                    "Calibration cleared successfully.\n\nGaze offsets have been reset to zero.",
+                    "Calibration Cleared",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to clear calibration: {ex.Message}", ex);
+            MessageBox.Show(
+                $"Failed to clear calibration:\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void RefreshCalibrationStatus()
+    {
+        try
+        {
+            var calibrationPath = AppConstants.CalibrationPath;
+
+            CalibrationFilePathLabel.Text = calibrationPath;
+
+            if (System.IO.File.Exists(calibrationPath))
+            {
+                var fileInfo = new System.IO.FileInfo(calibrationPath);
+                CalibrationDateLabel.Text = fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+                // Read calibration values
+                try
+                {
+                    var lines = System.IO.File.ReadAllText(calibrationPath);
+                    var values = lines.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (values.Length >= 2 &&
+                        float.TryParse(values[0], out float offsetX) &&
+                        float.TryParse(values[1], out float offsetY))
+                    {
+                        CalibrationOffsetsLabel.Text = $"X: {offsetX:F3}, Y: {offsetY:F3}";
+                    }
+                    else
+                    {
+                        CalibrationOffsetsLabel.Text = "Invalid calibration file format";
+                    }
+                }
+                catch
+                {
+                    CalibrationOffsetsLabel.Text = "Error reading calibration values";
+                }
+            }
+            else
+            {
+                CalibrationDateLabel.Text = "Never";
+                CalibrationOffsetsLabel.Text = "X: 0.000, Y: 0.000 (No calibration)";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to refresh calibration status: {ex.Message}", ex);
+            CalibrationDateLabel.Text = "Error";
+            CalibrationOffsetsLabel.Text = "Error reading status";
+        }
     }
 }

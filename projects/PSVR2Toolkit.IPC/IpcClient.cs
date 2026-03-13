@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace PSVR2Toolkit.CAPI {
     public class IpcClient {
         private const ushort IPC_SERVER_PORT = 3364;
-        private const ushort k_unIpcVersion = 2;
+        private const ushort k_unIpcVersion = 4;
 
         private static IpcClient m_pInstance;
 
@@ -380,6 +380,22 @@ namespace PSVR2Toolkit.CAPI {
                 amplitude = amplitude,
             };
             SendIpcCommand(ECommandType.ClientTriggerEffectMultiplePositionVibration, effectVibration);
+        }
+
+        public void StartGazeCalibration() {
+            if ( !m_running ) {
+                return;
+            }
+
+            SendIpcCommand(ECommandType.ClientStartGazeCalibration);
+        }
+
+        public void StopGazeCalibration() {
+            if ( !m_running ) {
+                return;
+            }
+
+            SendIpcCommand(ECommandType.ClientStopGazeCalibration);
         }
     }
 }

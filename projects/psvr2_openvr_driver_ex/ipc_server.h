@@ -26,7 +26,11 @@ namespace psvr2_toolkit {
 
       void UpdateGazeState(Hmd2GazeState *pGazeState, float leftEyelidOpenness, float rightEyelidOpenness);
 
+      float GetGazeOffsetX() const { return m_gazeOffsetX; }
+      float GetGazeOffsetY() const { return m_gazeOffsetY; }
+
     private:
+      void LoadCalibrationFile();
       struct ConnectionInfo_t {
         sockaddr_in clientAddr;
         uint16_t ipcVersion;
@@ -47,6 +51,10 @@ namespace psvr2_toolkit {
       Hmd2GazeState *m_pGazeState;
       float m_leftEyelidOpenness;
       float m_rightEyelidOpenness;
+
+      bool m_calibrationActive;
+      float m_gazeOffsetX;
+      float m_gazeOffsetY;
 
       void ReceiveLoop();
       void HandleClient(SOCKET clientSocket, SOCKADDR_IN clientAddr);

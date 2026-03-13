@@ -18,6 +18,9 @@ namespace PSVR2Toolkit.CAPI {
         ClientTriggerEffectMultiplePositionFeedback, // CommandDataClientTriggerEffectMultiplePositionFeedback
         ClientTriggerEffectSlopeFeedback, // CommandDataClientTriggerEffectSlopeFeedback
         ClientTriggerEffectMultiplePositionVibration, // CommandDataClientTriggerEffectMultiplePositionVibration
+
+        ClientStartGazeCalibration, // No command data.
+        ClientStopGazeCalibration, // No command data.
     };
 
     public enum EHandshakeResult : byte {

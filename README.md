@@ -13,116 +13,163 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Unofficial modification for the official PlayStation VR2 driver/app, which aims to improve your PlayStation VR2 experience on PC.
+Enhance your PlayStation VR2 experience on PC with better eye tracking, improved controllers, and more features.
 
-## Features
-- Eye tracking\*
-- Improved controller prediction
-- Improved controller haptics (w/ PCM haptics)
-- Adaptive triggers
+## What You Get
+- **Eye Tracking** - Works in VR games with calibration to improve accuracy
+- **Better Controllers** - Smoother tracking and realistic trigger feedback
+- **Haptic Effects** - Feel different sensations through your controller triggers
+- **Easy Setup** - Automatic installation with one command
 
-For developers, we also have our own API library, which allows you to take full advantage of these features.
+## Quick Start Guide
 
-\* Eye tracking calibration is currently not available yet, we have a few things to work out before we are ready to ship this feature!
+### Step 1: Download
+Download the latest release from the [Releases page](https://github.com/BnuuySolutions/PSVR2Toolkit/releases).
 
-## Installation Guide
+### Step 2: Install (Choose One Method)
 
-### Automated Installation (Recommended)
+#### Easy Installation (Recommended)
+1. Extract the downloaded files to a folder
+2. Right-click on `install.bat` and select "Run as Administrator"
+3. Wait for the installation to complete
+4. Restart SteamVR
 
-We provide PowerShell scripts to automate the installation process safely:
+That's it! You're done.
 
-**Full Install (Driver + SteamVR Settings Integration):**
+#### Advanced Installation (PowerShell)
+If you prefer using PowerShell commands:
+
+**Full Install (includes in-VR settings menu):**
 ```powershell
 .\scripts\driver-install-full.ps1 -SourceDll .\x64\Release\driver_playstation_vr2.dll
 ```
 
-**Driver Only Install:**
+**Basic Install (driver only):**
 ```powershell
 .\scripts\driver-install.ps1 -SourceDll .\x64\Release\driver_playstation_vr2.dll
 ```
 
-**Restore (Uninstall):**
+**Uninstall (restore original driver):**
 ```powershell
 .\scripts\driver-restore.ps1
 ```
 
-The scripts will:
-- Automatically locate your Steam installation
-- Back up the original Sony driver
-- Install/restore the driver files
-- Optionally install SteamVR settings integration (full install only)
-- Verify the installation
-- Create a log file for troubleshooting
+### Step 3: Use the Companion App
 
-### SteamVR Settings Integration
+After installation, run `PSVR2Toolkit.App.exe` to access:
 
-The full installation includes **in-VR settings integration** that adds a native "PlayStation VR2" section to SteamVR's settings menu, allowing you to toggle toolkit features without leaving VR:
+**Health Check Tab**
+- Checks if everything is installed correctly
+- Shows connection status
+- Helps diagnose problems
 
-- **Enable Eyelid Estimation** - Toggle experimental eyelid tracking
-- **Disable Play Area** - Turn off chaperone boundaries
-- **Hide PlayStation VR2 Overlay** - Remove Sony overlay
-- **Disable Dialog Pop-Ups** - Suppress Sony dialogs
-- **Disable PlayStation VR2 Sense Controllers** - Turn off controller support
-- **Disable Eye Tracking** - Turn off gaze tracking
+**Trigger Profiles Tab**
+- Choose different trigger feelings (Soft, Arcade, Realistic, Rumble)
+- Test effects before using them in games
+- Turn triggers off if you prefer
 
-Access via: **SteamVR Settings → PlayStation VR2**
+**Gaze Debug Tab**
+- See what your eyes are looking at in real-time
+- Useful for checking if eye tracking is working
 
-*SteamVR settings integration created by community member - integrated into official distribution with permission.*
+**Eye Calibration Tab** (New!)
+- Improve eye tracking accuracy
+- Takes 1-2 minutes
+- See instructions below
 
-### Manual Installation
+## Calibrating Eye Tracking
 
-If you prefer to install manually or the automated script fails:
+Eye tracking works out of the box, but calibration makes it more accurate.
 
-1.) Open Steam, go to the PS VR2 app, click on the cog wheel, and go to "Manage -> Browse local files". (If you are using a copy of the PS VR2 app not installed by Steam, go to that instead.)
+### When to Calibrate
+- First time using eye tracking
+- After adjusting how the headset sits on your head
+- If eye tracking feels off in games
 
-2.) Inside the newly opened file explorer, go into "SteamVR_Plug-In", then "bin" and finally "win64".
+### How to Calibrate (Simple Steps)
 
-3.) Rename "driver_playstation_vr2.dll" to "driver_playstation_vr2_orig.dll" (**IT MUST BE CALLED "driver_playstation_vr2_orig.dll", DO NOT RENAME IT TO ANYTHING ELSE, IT MUST BE EXACTLY THAT**)
+1. **Open the App**
+   - Run `PSVR2Toolkit.App.exe`
+   - Click the "Eye Calibration" tab
 
-4.) Download the "driver_playstation_vr2.dll" attached in a release, and copy/move it into the same folder where "driver_playstation_vr2_orig.dll" is at.
+2. **Start Calibration**
+   - Click "Launch Calibration Tool"
+   - Put on your headset
 
-5.) Your "win64" directory should now have 2 DLL files inside it, "driver_playstation_vr2.dll" and "driver_playstation_vr2_orig.dll". If you do not have both of those files, you fucked something up.
+3. **Follow the Dots**
+   - Red dots will appear in VR
+   - Look directly at each dot
+   - Pull the right trigger when you're looking at it
+   - Repeat for all dots (about 1-2 minutes)
 
-6.) Enjoy your new features, please give us feedback in our [Discord](https://discord.gg/dPsfJhsGwb).
+4. **Done!**
+   - Calibration saves automatically
+   - Eye tracking is now more accurate
+   - No need to restart anything
 
-## Post-Installation
+### Calibration Tips
+- Make sure your headset fits comfortably before calibrating
+- Look at the center of each dot
+- Take your time - accuracy is more important than speed
+- You can recalibrate anytime if it doesn't feel right
 
-After installation, **restart SteamVR** for changes to take effect.
+## In-VR Settings Menu
 
-### Companion Application
+If you used the full installation, you can change settings without taking off your headset:
 
-Run `PSVR2Toolkit.App.exe` for additional features:
-- **Health Check** - Diagnose installation and connection issues
-- **Trigger Profiles** - Apply preset haptic effects (Off, Soft, Arcade, Realistic, Rumble)
-- **Gaze Debug** - View real-time eye tracking data
+1. Open SteamVR settings (in VR or on desktop)
+2. Look for "PlayStation VR2" section
+3. Toggle features on/off:
+   - Eye tracking
+   - Controller tracking
+   - Pop-up messages
+   - And more
 
-### Verify Installation
+## Manual Installation (If Automatic Fails)
 
-Use the Health Check tab in the companion app to verify:
-- ✓ Steam installation detected
-- ✓ Driver files correctly installed
-- ✓ IPC connection established
-- ✓ Version compatibility
+Only follow these steps if the automatic installation doesn't work:
 
-## Troubleshooting
+1. Open Steam and find the PS VR2 app
+2. Right-click → Manage → Browse local files
+3. Navigate to: `SteamVR_Plug-In\bin\win64`
+4. Rename `driver_playstation_vr2.dll` to `driver_playstation_vr2_orig.dll`
+   - **Important:** The name must be exactly `driver_playstation_vr2_orig.dll`
+5. Copy the new `driver_playstation_vr2.dll` from the release into this folder
+6. You should now have both files:
+   - `driver_playstation_vr2.dll` (new)
+   - `driver_playstation_vr2_orig.dll` (backup)
+7. Restart SteamVR
 
-**Problem: "Backup already exists" error**
-- Driver may already be installed. Use `-Force` flag to reinstall.
+## Common Problems & Solutions
 
-**Problem: SteamVR settings not showing**
-- Restart SteamVR completely
-- Verify files were copied to correct locations
+**Installation says "backup already exists"**
+- The toolkit is already installed
+- To reinstall, run the uninstall script first, then install again
 
-**Problem: IPC connection failed**
-- Start SteamVR with PS VR2 connected
-- Check Windows Firewall isn't blocking port 3364
-- Restart the companion application
+**SteamVR settings menu doesn't show PlayStation VR2 section**
+- Close SteamVR completely (right-click system tray icon → Exit)
+- Start SteamVR again
+- If still not showing, you may have used the basic install instead of full install
 
-**Problem: Eye tracking not working**
-- Ensure "Disable Eye Tracking" is OFF in SteamVR settings
-- Eye tracking calibration is not yet available (coming soon)
+**Companion app says "Connection Failed"**
+- Make sure SteamVR is running
+- Make sure your PS VR2 headset is connected
+- Try restarting the companion app
+- Check Windows Firewall isn't blocking the app
 
-For more help, visit our [Discord](https://discord.gg/dPsfJhsGwb).
+**Eye tracking not working in games**
+- Open SteamVR settings → PlayStation VR2
+- Make sure "Disable Eye Tracking" is turned OFF
+- Try calibrating eye tracking (see above)
+- Adjust your headset for a better fit
+
+**Triggers feel weird or don't work**
+- Open the companion app
+- Go to "Trigger Profiles" tab
+- Try different profiles or turn them off
+
+**Need more help?**
+Join our [Discord community](https://discord.gg/dPsfJhsGwb) - we're happy to help!
 
 # Contact
 Have any legal complaints or questions?

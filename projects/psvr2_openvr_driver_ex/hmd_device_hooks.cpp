@@ -7,6 +7,7 @@
 #include "hmd_device_hooks.h"
 #include "hmd_driver_loader.h"
 #include "hook_lib.h"
+#include "ipc_server.h"
 #include "vr_settings.h"
 #include "util.h"
 
@@ -142,8 +143,25 @@ namespace psvr2_toolkit {
       auto& origin = pGazeState->combined.gazeOriginMm;
       auto& direction = pGazeState->combined.gazeDirNorm;
 
+      // Apply calibration offsets
+      static auto* pIpcServer = psvr2_toolkit::ipc::IpcServer::Instance();
+      float offsetX = pIpcServer->GetGazeOffsetX();
+      float offsetY = pIpcServer->GetGazeOffsetY();
+
+      float correctedX = direction.x + offsetX;
+      float correctedY = direction.y + offsetY;
+      float correctedZ = direction.z;
+
+      // Normalize the corrected direction vector
+      float length = sqrtf(correctedX * correctedX + correctedY * correctedY + correctedZ * correctedZ);
+      if (length > 0.0f) {
+        correctedX /= length;
+        correctedY /= length;
+        correctedZ /= length;
+      }
+
       eyeTrackingData.vGazeOrigin = vr::HmdVector3_t { -origin.x / 1000.0f, origin.y / 1000.0f, -origin.z / 1000.0f };
-      eyeTrackingData.vGazeTarget = vr::HmdVector3_t { -direction.x, direction.y, -direction.z };
+      eyeTrackingData.vGazeTarget = vr::HmdVector3_t { -correctedX, correctedY, -correctedZ };
 
       int64_t hmdToHostOffset;
 
