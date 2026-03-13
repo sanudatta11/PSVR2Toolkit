@@ -56,7 +56,7 @@ If you prefer using PowerShell commands:
 
 ### Step 3: Use the Companion App
 
-After installation, run `PSVR2Toolkit.App.exe` to access:
+The companion app is included in the release package you downloaded. After installation, run `PSVR2Toolkit.App.exe` (from the extracted folder) to access:
 
 **Health Check Tab**
 - Checks if everything is installed correctly
@@ -169,9 +169,17 @@ Only follow these steps if the automatic installation doesn't work:
 - Try different profiles or turn them off
 
 **Need more help?**
-Join our [Discord community](https://discord.gg/dPsfJhsGwb) - we're happy to help!
+Join our community or reach out directly - we're happy to help!
 
-# Contact
-Have any legal complaints or questions?
-- Email: `wdh at bnuuy.solutions`
-- Discord: `notahopper`
+## Contact & Support
+
+**Project Maintainer:** sanudatta11
+- GitHub: [@sanudatta11](https://github.com/sanudatta11)
+- Repository: [PSVR2Toolkit](https://github.com/sanudatta11/PSVR2Toolkit)
+
+**For Issues & Bug Reports:**
+- Open an issue on [GitHub Issues](https://github.com/sanudatta11/PSVR2Toolkit/issues)
+
+**Original Project:**
+- Based on [BnuuySolutions/PSVR2Toolkit](https://github.com/BnuuySolutions/PSVR2Toolkit)
+- Community Discord: [discord.gg/dPsfJhsGwb](https://discord.gg/dPsfJhsGwb)
